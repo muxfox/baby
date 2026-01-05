@@ -1,0 +1,10 @@
+
+> workspace@1.0.0 start
+> node index.js
+
+MovieBox API Server running on http://0.0.0.0:5000
+Initializing session cookies...
+Session cookies initialized successfully
+Received cookies: [
+  'account=5234660882684300416|0|H5|1767630173|; Path=/; Max-Age=2592000; HttpOnly; Secure; SameSite=None'
+]
