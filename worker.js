@@ -248,8 +248,10 @@ async function handleSources(movieId, url, request) {
     const infoResponse = await makeApiRequest(`${HOST_URL}/wefeed-h5-bff/web/subject/detail?${infoParams}`);
     const infoData = await infoResponse.json();
     const movieInfo = processApiResponse(infoData);
-    
+
     const detailPath = movieInfo?.subject?.detailPath;
+    const subjectType = movieInfo?.subject?.subjectType;
+
     if (!detailPath) {
         return new Response(JSON.stringify({
             status: 'error',
@@ -262,8 +264,11 @@ async function handleSources(movieId, url, request) {
             }
         });
     }
-    
-    const refererUrl = `https://fmoviesunblocked.net/spa/videoPlayPage/movies/${detailPath}?id=${movieId}&type=/movie/detail`;
+
+    const isTvSeries = subjectType === 2;
+    const pathType = isTvSeries ? 'tv' : 'movies';
+    const detailType = isTvSeries ? '/tv/detail' : '/movie/detail';
+    const refererUrl = `https://fmoviesunblocked.net/spa/videoPlayPage/${pathType}/${detailPath}?id=${movieId}&type=${detailType}`;
     
     const params = new URLSearchParams({
         subjectId: movieId,

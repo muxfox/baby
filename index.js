@@ -572,13 +572,16 @@ app.get('/api/sources/:movieId', async (req, res) => {
         
         const movieInfo = processApiResponse(infoResponse);
         const detailPath = movieInfo?.subject?.detailPath;
-        
+        const subjectType = movieInfo?.subject?.subjectType;
+
         if (!detailPath) {
             throw new Error('Could not get movie detail path for referer header');
         }
-        
-        // Create the proper referer header - try fmovies domain based on user's working link
-        const refererUrl = `https://fmoviesunblocked.net/spa/videoPlayPage/movies/${detailPath}?id=${movieId}&type=/movie/detail`;
+
+        const isTvSeries = subjectType === 2;
+        const pathType = isTvSeries ? 'tv' : 'movies';
+        const detailType = isTvSeries ? '/tv/detail' : '/movie/detail';
+        const refererUrl = `https://fmoviesunblocked.net/spa/videoPlayPage/${pathType}/${detailPath}?id=${movieId}&type=${detailType}`;
         console.log(`Using referer: ${refererUrl}`);
         
         // Also try the sources endpoint with fmovies domain
