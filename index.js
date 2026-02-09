@@ -367,29 +367,57 @@ app.get('/api/download', async (req, res) => {
     try {
         const downloadUrl = req.query.url;
         const title = req.query.title || 'video';
+        // Parse simple string params if they come in as strings
         const season = req.query.season;
         const episode = req.query.episode;
         const quality = req.query.quality || '';
 
         if (!downloadUrl) return res.status(400).json({ message: 'No URL provided' });
 
-        let filename = sanitizeFilename(title);
-        if (season && episode) filename += `_S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`;
-        if (quality) filename += `_${quality}`;
-        filename += '.mp4';
+        // Define the headers needed to bypass restrictions
+        const proxyHeaders = {
+            'User-Agent': 'okhttp/4.12.0',
+            'Referer': 'https://fmoviesunblocked.net/',
+            'Origin': 'https://fmoviesunblocked.net'
+        };
 
-        const headResponse = await fetch(downloadUrl, { method: 'HEAD', headers: DEFAULT_HEADERS });
+        // Filename construction
+        // Note: Make sure you have the sanitizeFilename function defined elsewhere
+        let filename = sanitizeFilename(title); 
+        if (season && episode) {
+            filename += `_S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`;
+        }
+        if (quality) {
+            filename += `_${quality}`;
+        }
+        if (!filename.endsWith('.mp4')) {
+            filename += '.mp4';
+        }
+
+        // 1. HEAD request to get file size and type using specific headers
+        const headResponse = await fetch(downloadUrl, { 
+            method: 'HEAD', 
+            headers: proxyHeaders 
+        });
+
         const fileSize = headResponse.headers.get('content-length');
         const contentType = headResponse.headers.get('content-type') || 'video/mp4';
 
+        // 2. Set response headers for download
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         res.setHeader('Content-Type', contentType);
         if (fileSize) res.setHeader('Content-Length', fileSize);
 
-        const response = await fetch(downloadUrl, { headers: DEFAULT_HEADERS });
+        // 3. GET request to pipe the data using specific headers
+        const response = await fetch(downloadUrl, { 
+            headers: proxyHeaders 
+        });
+
+        // Pipe the web stream to the response
         Readable.fromWeb(response.body).pipe(res);
 
     } catch (error) {
+        console.error('Download error:', error);
         if (!res.headersSent) res.status(500).json({ message: error.message });
     }
 });
